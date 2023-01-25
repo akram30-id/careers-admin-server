@@ -62,6 +62,7 @@ class Vacancy extends CI_Controller
                     $data['response'] = [
                         'success' => true,
                         'status' => 200,
+                        'id_vacancy' => $this->session->id_vacancy,
                         'message' => 'Buka Lowongan Berhasil',
                     ];
                     $this->session->unset_userdata(['jobdesc', 'pengalaman', 'tambahan_persyaratan', 'salary', 'id_vacancy', 'id_persyaratan']);
@@ -259,7 +260,7 @@ class Vacancy extends CI_Controller
         $request_method = $_SERVER['REQUEST_METHOD'];
         switch ($request_method) {
             case 'POST':
-                $jobdesc = $this->input->post('jobdesc');
+                $jobdesc = explode(',', $this->input->post('jobdesc'));
 
                 $idVacancy = $this->session->id_vacancy;
 
@@ -277,6 +278,7 @@ class Vacancy extends CI_Controller
                     $data['response'] = [
                         'success' => true,
                         'message' => 'Session Set',
+                        'input' => $jobdesc_session,
                         'data' => $this->session->userdata('jobdesc'),
                     ];
                 } else {
@@ -385,7 +387,7 @@ class Vacancy extends CI_Controller
                             $data['response'] = [
                                 'success' => true,
                                 'message' => 'Session Set',
-                                'data' => $this->session->id_persyaratan
+                                'id_persyaratan' => $this->session->id_persyaratan
                             ];
                         } else {
                             $data['response'] = [
@@ -442,6 +444,7 @@ class Vacancy extends CI_Controller
                                 'success' => true,
                                 'status' => 200,
                                 'message' => 'Persyaratan Updated',
+                                'id_persyaratan' => $this->session->id_persyaratan
                             ];
                         } else {
                             $data['response'] = [
@@ -486,7 +489,7 @@ class Vacancy extends CI_Controller
             case 'POST':
                 if ($this->session->id_persyaratan != "" || $this->session->id_persyaratan != null) {
 
-                    $tambahanPersyaratan = $this->input->post('tambahan_persyaratan');
+                    $tambahanPersyaratan = explode(',', $this->input->post('tambahan_persyaratan'));
 
                     $tambahanPersyaratan_session = [];
                     for ($i = 0; $i < count($tambahanPersyaratan); $i++) {
@@ -500,6 +503,7 @@ class Vacancy extends CI_Controller
                         'success' => true,
                         'status' => 200,
                         'message' => 'Session Set',
+                        'input' => $tambahanPersyaratan_session,
                         'persyaratan_tambahan' => $this->session->tambahan_persyaratan
                     ];
                 } else {
@@ -583,9 +587,9 @@ class Vacancy extends CI_Controller
 
         switch ($request_method) {
             case 'POST':
-                if ($this->session->id_persyaratan != "" || $this->session->id_persyaratan != null) {
-                    $minSalary = $this->input->post('min_salary');
-                    $maxSalary = $this->input->post('max_salary');
+                if ($this->session->id_vacancy != "" || $this->session->id_vacancy != null) {
+                    $minSalary = str_replace(',', '', $this->input->post('min_salary'));
+                    $maxSalary = str_replace(',', '', $this->input->post('max_salary'));
 
                     $dataSalary = [
                         'min_salary' => $minSalary,
@@ -604,7 +608,7 @@ class Vacancy extends CI_Controller
                     $data['response'] = [
                         'success' => false,
                         'status' => 404,
-                        'message' => 'No id_persyaratan Session Set'
+                        'message' => 'No id_vacancy Session Set'
                     ];
                 }
                 break;
