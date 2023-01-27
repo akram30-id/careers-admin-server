@@ -292,7 +292,7 @@ class Vacancy extends CI_Controller
 
             case 'GET':
                 $idVacancy = $this->session->id_vacancy;
-                
+
                 $queryGet = $this->VacancyModel->getJobdesc($idVacancy);
                 $cek = $queryGet->num_rows();
 
@@ -364,7 +364,7 @@ class Vacancy extends CI_Controller
                     $idVacancy = $this->session->id_vacancy;
 
                     if ($idVacancy != null || $idVacancy != "") {
-                       
+
                         $idPersyaratan = $idVacancy . "999" . date('d');
 
                         $dataPersyaratan = [
@@ -618,6 +618,340 @@ class Vacancy extends CI_Controller
                     'success' => false,
                     'status' => 400,
                     'message' => 'Bad Request'
+                ];
+                break;
+        }
+
+        header('Content-Type: application/json');
+        echo json_encode($data);
+    }
+
+
+
+    // splitter
+    public function index_limited($idVacancy = NULL)
+    {
+        $request_method = $_SERVER['REQUEST_METHOD'];
+
+        switch ($request_method) {
+            case 'GET':
+                $query = $this->VacancyModel->getAllVacancy();
+                $divisi = $this->VacancyModel->getAllDivisi();
+                $cek = $query->num_rows();
+
+                $grouping = [];
+                foreach ($divisi->result() as $div) {
+                    $dataVacancy = $this->VacancyModel->getLimitedVacancy($div->id_divisi)->result();
+                    foreach ($dataVacancy as $vacancies) {
+                        $grouping[$div->nama_divisi][] = $vacancies;
+                        if (count($grouping[$div->nama_divisi]) >= 3) {
+                            break;
+                        }
+                    }
+                }
+
+                if ($cek > 0) {
+                    $data['response'] = [
+                        'status' => 200,
+                        'message' => 'Vacancies Found',
+                        'count' => count($grouping),
+                        'data' => $grouping
+                    ];
+                } else {
+                    $data['response'] = [
+                        'status' => 404,
+                        'message' => 'No Vacancies Found',
+                    ];
+                }
+
+                break;
+
+            case 'DELETE':
+
+                $idPersyaratan = $this->VacancyModel->getData('tbl_persyaratan', ['id_vacancy' => $idVacancy])->result()[0]->id_persyaratan;
+
+                $response_object = [];
+                $berhasil = 'Berhasil Dihapus';
+                $gagal = 'Gagal Dihapus';
+
+                if (isset($idPersyaratan)) {
+                    $tambahanSyarat = $this->VacancyModel->getData('tbl_tambahan_persyaratan', ['id_persyaratan' => $idPersyaratan]);
+                    $pengalaman = $this->VacancyModel->getData('tbl_pengalaman', ['id_persyaratan' => $idPersyaratan]);
+
+                    if ($tambahanSyarat->num_rows() > 0) {
+                        $deleteTambahanSyarat = $this->VacancyModel->deleteLowongan('tbl_tambahan_persyaratan', ['id_persyaratan' => $idPersyaratan]);
+
+                        if ($deleteTambahanSyarat != FALSE) {
+                            array_push($response_object, ['tambahan_syarat' => 'Berhasil Dihapus']);
+                        } else {
+                            array_push($response_object, ['tambahan_syarat' => 'Gagal Dihapus']);
+                        }
+                    }
+
+                    if ($pengalaman->num_rows() > 0) {
+                        $deletePengalaman = $this->VacancyModel->deleteLowongan('tbl_pengalaman', ['id_persyaratan' => $idPersyaratan]);
+
+                        if ($deletePengalaman != FALSE) {
+                            array_push($response_object, ['pengalaman' => $berhasil]);
+                        } else {
+                            array_push($response_object, ['pengalaman' => $gagal]);
+                        }
+                    }
+                }
+
+                $jobdesc = $this->VacancyModel->getData('tbl_jobdesc', ['id_vacancy' => $idVacancy]);
+
+                if ($jobdesc->num_rows() > 0) {
+                    $deleteJobdesc = $this->VacancyModel->deleteLowongan('tbl_jobdesc', ['id_vacancy' => $idVacancy]);
+                    if ($deleteJobdesc != FALSE) {
+                        array_push($response_object, ['jobdesc' => $berhasil]);
+                    } else {
+                        array_push($response_object, ['jobdesc' => $gagal]);
+                    }
+                }
+
+                $salary = $this->VacancyModel->getData('tbl_salary', ['id_vacancy' => $idVacancy]);
+
+                if ($salary->num_rows() > 0) {
+                    $deleteSalary = $this->VacancyModel->deleteLowongan('tbl_salary', ['id_vacancy' => $idVacancy]);
+                    if ($deleteSalary != FALSE) {
+                        array_push($response_object, ['salary' => $berhasil]);
+                    } else {
+                        array_push($response_object, ['salary' => $gagal]);
+                    }
+                }
+
+                $persyaratan = $this->VacancyModel->getData('tbl_persyaratan', ['id_vacancy' => $idVacancy]);
+
+                if ($persyaratan->num_rows() > 0) {
+                    $deletePersyaratan = $this->VacancyModel->deleteLowongan('tbl_persyaratan', ['id_vacancy' => $idVacancy]);
+                    if ($deletePersyaratan != FALSE) {
+                        array_push($response_object, ['persyaratan' => $berhasil]);
+                    } else {
+                        array_push($response_object, ['persyaratan' => $gagal]);
+                    }
+                }
+
+                $vacancy = $this->VacancyModel->getData('tbl_vacancy', ['id_vacancy' => $idVacancy]);
+
+                if ($vacancy->num_rows() > 0) {
+                    $deleteVacancy = $this->VacancyModel->deleteLowongan('tbl_vacancy', ['id_vacancy' => $idVacancy]);
+                    if ($deleteVacancy != FALSE) {
+                        array_push($response_object, ['vacancy' => $berhasil]);
+                    } else {
+                        array_push($response_object, ['vacancy' => $gagal]);
+                    }
+                }
+
+
+                $data['response'] = [
+                    'status' => 200,
+                    'message' => 'Delete Result Genereated',
+                    'data' => $response_object
+                ];
+
+                break;
+
+            default:
+                $data['response'] = [
+                    'status' => 400,
+                    'message' => 'Bad Request',
+                ];
+                break;
+        }
+
+        header('Content-Type: application/json');
+        echo json_encode($data);
+    }
+
+    public function index_update_status()
+    {
+        $request_method = $_SERVER['REQUEST_METHOD'];
+        switch ($request_method) {
+            case 'PUT':
+                $idVacancy = $this->input->input_stream('id_vacancy');
+                $status = $this->input->input_stream('status');
+
+                $query = $this->VacancyModel->updateStatus($idVacancy, $status);
+
+                if ($query) {
+                    $data['response'] = [
+                        'status' => 200,
+                        'message' => 'Vacancy Updated',
+                        'data' => [$idVacancy, $status]
+                    ];
+                } else {
+                    $data['response'] = [
+                        'status' => 500,
+                        'message' => 'Internal Server Error',
+                    ];
+                }
+                break;
+
+            default:
+                $data['response'] = [
+                    'status' => 400,
+                    'message' => 'Bad Request',
+                ];
+                break;
+        }
+
+        header('Content-Type: application/json');
+        echo json_encode($data);
+    }
+
+    public function index_sortby_divisi($idDivisi)
+    {
+        $request_method = $_SERVER['REQUEST_METHOD'];
+        switch ($request_method) {
+            case 'GET':
+                $grouping = [];
+                $query = $this->VacancyModel->getLimitedVacancy($idDivisi);
+                $divisi = $this->VacancyModel->getDivisi($idDivisi)->result();
+                foreach ($query->result() as $vacancies) {
+                    $grouping[$divisi[0]->nama_divisi][] = $vacancies;
+                    if (count($grouping[$divisi[0]->nama_divisi]) >= 3) {
+                        break;
+                    }
+                }
+
+                if ($query->num_rows() > 0) {
+                    $data['response'] = [
+                        'status' => 200,
+                        'message' => 'Vacancy Found',
+                        'data' => $grouping
+                    ];
+                } else {
+                    $data['response'] = [
+                        'status' => 404,
+                        'message' => 'No Vacancy Available',
+                    ];
+                }
+
+                break;
+
+            default:
+                $data['response'] = [
+                    'status' => 400,
+                    'message' => 'Bad Request',
+                ];
+                break;
+        }
+
+        header('Content-Type: application/json');
+        echo json_encode($data);
+    }
+
+    public function index_search_limited_vacancy($idDivisi = NULL)
+    {
+        $request_method = $_SERVER['REQUEST_METHOD'];
+        switch ($request_method) {
+            case 'GET':
+                $searchValue = $this->input->get('search_value');
+
+                $grouping = [];
+
+                if ($idDivisi == "" || $idDivisi == NULL) {
+                    $like = ['posisi' => $searchValue];
+
+                    $query = $this->VacancyModel->searchLimitedVacancy($like);
+                    $divisi = $this->VacancyModel->getAllDivisi();
+                    foreach ($divisi->result() as $div) {
+                        foreach ($query->result() as $vacancies) {
+                            if ($div->nama_divisi == $vacancies->nama_divisi) {
+                                $grouping[$div->nama_divisi][] = $vacancies;
+                                if (count($grouping[$div->nama_divisi]) >= 5) {
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    $like = ['tbl_vacancy.posisi' => $searchValue, 'tbl_vacancy.id_divisi' => $idDivisi];
+
+                    $query = $this->VacancyModel->searchLimitedVacancy($like);
+                    $divisi = $this->VacancyModel->getDivisi($idDivisi)->result();
+                    foreach ($query->result() as $vacancies) {
+                        $grouping[$divisi[0]->nama_divisi][] = $vacancies;
+                        if (count($grouping[$divisi[0]->nama_divisi]) >= 5) {
+                            break;
+                        }
+                    }
+                }
+
+                if ($query->num_rows() > 0) {
+                    $data['response'] = [
+                        'status' => 200,
+                        'message' => 'Vacancy Found',
+                        'data' => $grouping
+                    ];
+                } else {
+                    $data['response'] = [
+                        'status' => 404,
+                        'message' => 'No Vacancy Available',
+                    ];
+                }
+
+                break;
+
+            default:
+                $data['response'] = [
+                    'status' => 400,
+                    'message' => 'Bad Request',
+                ];
+                break;
+        }
+
+        header('Content-Type: application/json');
+        echo json_encode($data);
+    }
+
+    public function index_vacancy_divisi($idDivisi, $page)
+    {
+        $request_method = $_SERVER['REQUEST_METHOD'];
+        switch ($request_method) {
+            case 'GET':
+                $query = $this->VacancyModel->getLimitedVacancy($idDivisi);
+
+                $page = intval($page);
+
+                if ($query->num_rows() > 0) {
+
+                    $result = $query->result();
+                    $pageCount = ceil(count($result) / 2);
+
+                    if (!isset($page)) {
+                        $page = 1;
+                    }
+
+                    if ($page <= 1) {
+                        $page = 1;
+                    }
+
+                    if ($page > $pageCount) {
+                        $page = $pageCount;
+                    }
+
+                    $data['response'] = [
+                        'status' => 200,
+                        'message' => 'Vacancies Found',
+                        'page' => $page,
+                        'page_count' => $pageCount,
+                        'data' => array_slice($result, ($page * 2) - 2, $page * 2)
+                    ];
+                } else {
+                    $data['response'] = [
+                        'status' => 404,
+                        'message' => 'No Data Available',
+                    ];
+                }
+
+                break;
+
+            default:
+                $data['response'] = [
+                    'status' => 400,
+                    'message' => 'Bad Request',
                 ];
                 break;
         }

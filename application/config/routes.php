@@ -5,6 +5,18 @@ $route['divisi/i/(:any)'] = 'Divisi/index/$1';
 
 $route['pendidikan/'] = 'Pendidikan/';
 
+// vacancy splitter
+$route['vacancy/latest'] = 'Vacancy/index_limited/';
+$route['vacancy/d/(:any)'] = 'Vacancy/index_limited/$1';
+$route['vacancy/s'] = 'Vacancy/index_search_limited_vacancy';
+$route['vacancy/s/(:any)'] = 'Vacancy/index_search_limited_vacancy/$1';
+$route['vacancy/s-divisi/(:any)'] = 'Vacancy/index_sortby_divisi/$1';
+
+// get vacancies by divisi
+$route['vacancy/divisi/(:any)/(:any)'] = 'Vacancy/index_vacancy_divisi/$1/$2';
+
+$route['vacancy/status'] = 'Vacancy/index_update_status/';
+
 /*
 | -------------------------------------------------------------------------
 | URI ROUTING
