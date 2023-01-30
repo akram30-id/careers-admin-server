@@ -177,4 +177,32 @@ class Divisi extends CI_Controller
 
         echo json_encode($output);
     }
+
+    public function index_divisi_by_id($id_divisi)
+    {
+        $request_method = $_SERVER['REQUEST_METHOD'];
+        switch ($request_method) {
+            case 'GET':
+                $divisi = $this->DivisiModel->getDivisiById($id_divisi)->result();
+
+                $data['response'] = [
+                    'success' => true,
+                    'status' => 200,
+                    'message' => 'Divisi Found',
+                    'divisi' => $divisi[0]->nama_divisi
+                ];
+
+                break;
+
+            default:
+                $data['response'] = [
+                    'success' => false,
+                    'status' => 400,
+                    'message' => 'Bad Request'
+                ];
+                break;
+        }
+        header('Content-Type: application/json');
+        echo json_encode($data);
+    }
 }

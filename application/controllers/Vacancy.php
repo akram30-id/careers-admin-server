@@ -76,6 +76,78 @@ class Vacancy extends CI_Controller
 
                 break;
 
+            case 'PUT':
+
+                // jobdesc update to database
+                //delete first
+                $id_jobdesc_session = $this->session->id_jobdesc;
+                for ($i=0; $i < count($id_jobdesc_session); $i++) { 
+                    $queryInsertJobDesc = $this->VacancyModel->deleteLowongan('tbl_jobdesc', ['id_jobdesc' => $id_jobdesc_session[$i]]);
+                }
+                
+                // then update
+                $jobdesc = $this->session->jobdesc;
+                for ($i = 0; $i < count($jobdesc); $i++) {
+                    $dataJobdesc = [
+                        'id_vacancy' => $idVacancy,
+                        'deskripsi_jobdesc' => $jobdesc[$i],
+                    ];
+                    $queryInsertJobDesc = $this->VacancyModel->insertLowongan('tbl_jobdesc', $dataJobdesc);
+                }
+
+                // tambahan persyaratan update to database
+                //delete first
+                $id_persyaratan_tambahan = $this->session->id_tambahan_persyaratan;
+                for ($i=0; $i < count($id_persyaratan_tambahan); $i++) { 
+                    $queryInsertJobDesc = $this->VacancyModel->deleteLowongan('tbl_tambahan_persyaratan', ['id_tambahan_persyaratan' => $id_persyaratan_tambahan[$i]]);
+                }
+                
+                // then update
+                $tambahanPersyaratan = $this->session->tambahan_persyaratan;
+                for ($i = 0; $i < count($tambahanPersyaratan); $i++) {
+                    $dataTambahanPersyaratan = [
+                        'id_persyaratan' => $idPersyaratan,
+                        'tambahan_persyaratan' => $tambahanPersyaratan[$i],
+                    ];
+                    $queryInsertTambahanPersyaratan = $this->VacancyModel->insertLowongan('tbl_tambahan_persyaratan', $dataTambahanPersyaratan);
+                }
+
+                // pengalaman input to database
+                $dataPengalaman = [
+                    'id_persyaratan' => $idPersyaratan,
+                    'min_lama_pengalaman' => $this->session->pengalaman['min_lama_pengalaman'],
+                    'max_lama_pengalaman' => $this->session->pengalaman['max_lama_pengalaman'],
+                    'bidang_pengalaman' => $this->session->pengalaman['bidang_pengalaman'],
+                ];
+                $queryInsertPengalaman =  $this->VacancyModel->updateLowongan('tbl_pengalaman', ['id_pengalaman' => $this->session->id_pengalaman], $dataPengalaman);
+
+                // salary input to database
+                $dataSalary = [
+                    'id_vacancy' => $idVacancy,
+                    'min_salary' => $this->session->salary['min_salary'],
+                    'max_salary' => $this->session->salary['max_salary'],
+                ];
+                $queryInsertSalary = $this->VacancyModel->updateLowongan('tbl_salary', ['id_salary' => $this->session->id_salary], $dataSalary);
+
+                if ($queryInsertJobDesc && $queryInsertTambahanPersyaratan && $queryInsertPengalaman && $queryInsertSalary) {
+                    $data['response'] = [
+                        'success' => true,
+                        'status' => 200,
+                        'id_vacancy' => $this->session->id_vacancy,
+                        'message' => 'Update Lowongan Berhasil',
+                    ];
+                    $this->session->unset_userdata(['jobdesc', 'pengalaman', 'tambahan_persyaratan', 'salary', 'id_vacancy', 'id_persyaratan']);
+                } else {
+                    $data['response'] = [
+                        'success' => false,
+                        'status' => 500,
+                        'message' => 'Internal Server Error',
+                    ];
+                }
+
+                break;
+
+
             case 'DELETE':
                 $idVacancy = $this->session->id_vacancy;
                 $idPersyaratan = $this->session->id_persyaratan;
@@ -311,27 +383,6 @@ class Vacancy extends CI_Controller
                     ];
                 }
                 break;
-
-                // case 'PUT':
-                // $queryGet = $this->VacancyModel->getJobdesc($idVacancy);
-                // $cek = $queryGet->num_rows();
-
-                // if ($cek < 1) {
-                //     $data['response'] = [
-                //         'success' => false,
-                //         'status' => 404,
-                //         'message' => 'No Data Found'
-                //     ];
-                // } else {
-                //     $dataJobdesc = $queryGet->result();
-                //     $data['response'] = [
-                //         'success' => true,
-                //         'status' => 200,
-                //         'data' => $dataJobdesc
-                //     ];
-                // !!write query to update jobdesc below!!
-                // }
-                // break;
 
             default:
                 $data['response'] = [
@@ -626,6 +677,85 @@ class Vacancy extends CI_Controller
         echo json_encode($data);
     }
 
+    public function updateVacancy($idVacancy)
+    {
+        $request_method = $_SERVER['REQUEST_METHOD'];
+        switch ($request_method) {
+            case 'POST':
+                $this->session->set_userdata(['id_vacancy' => $idVacancy]);
+                $data['response'] = [
+                    'status' => 200,
+                    'id_vacancy' => $this->session->id_vacancy
+                ];
+                break;
+
+            case 'GET':
+                $vacancy = $this->VacancyModel->getData('tbl_vacancy', ['id_vacancy' => $idVacancy]);
+                $persyaratan = $this->VacancyModel->getData('tbl_persyaratan', ['id_vacancy' => $idVacancy]);
+                $salary = $this->VacancyModel->getData('tbl_salary', ['id_vacancy' => $idVacancy]);
+                $jobdesc = $this->VacancyModel->getData('tbl_jobdesc', ['id_vacancy' => $idVacancy]);
+                $tambahan_persyaratan = $this->VacancyModel->getData('tbl_tambahan_persyaratan', ['id_persyaratan' => $persyaratan->result()[0]->id_persyaratan]);
+                $pengalaman = $this->VacancyModel->getData('tbl_pengalaman', ['id_persyaratan' => $persyaratan->result()[0]->id_persyaratan]);
+
+                if ($vacancy->num_rows() > 0) {
+                    $this->session->set_userdata(['id_persyaratan' => $persyaratan->result()[0]->id_persyaratan]);
+                    $this->session->set_userdata(['id_salary' => $salary->result()[0]->id_salary]);
+
+                    $id_jobdesc_session = [];
+                    foreach ($jobdesc->result() as $jobs) {
+                        $id_jobdesc_session[] = $jobs->id_jobdesc;
+                    }
+                    $this->session->set_userdata(['id_jobdesc' => $id_jobdesc_session]);
+
+                    $id_persyaratan_tambahan = [];
+                    foreach ($tambahan_persyaratan->result() as $tambahan) {
+                        $id_persyaratan_tambahan[] = $tambahan->id_tambahan_persyaratan;
+                    }
+                    $this->session->set_userdata(['id_tambahan_persyaratan' => $id_persyaratan_tambahan]);
+
+                    $this->session->set_userdata(['id_pengalaman' => $pengalaman->result()[0]->id_pengalaman]);
+
+                    $data['response'] = [
+                        'status' => 200,
+                        'message' => 'Vacancy Found',
+                        'session' => [
+                            'id_vacancy' => $this->session->id_vacancy,
+                            'id_persyaratan' => $this->session->id_persyaratan,
+                            'id_salary' => $this->session->id_salary,
+                            'id_jobdesc' => $this->session->id_jobdesc,
+                            'id_tambahan_persyaratan' => $this->session->id_tambahan_persyaratan,
+                            'id_pengalaman' => $this->session->id_pengalaman,
+                        ],
+                        'data' => [
+                            'vacancy' => $vacancy->result(),
+                            'persyaratan' => $persyaratan->result(),
+                            'salary' => $salary->result(),
+                            'jobdesc' => $jobdesc->result(),
+                            'tambahan_persyaratan' => $tambahan_persyaratan->result(),
+                            'pengalaman' => $pengalaman->result(),
+                        ]
+                    ];
+                } else {
+                    $data['response'] = [
+                        'status' => 404,
+                        'message' => 'No Vacancy Found'
+                    ];
+                }
+
+                break;
+
+            default:
+                $data['response'] = [
+                    'status' => 400,
+                    'message' => 'Bad Request'
+                ];
+                break;
+        }
+
+        header('Content-Type: application/json');
+        echo json_encode($data);
+    }
+
 
 
     // splitter
@@ -860,7 +990,7 @@ class Vacancy extends CI_Controller
                         foreach ($query->result() as $vacancies) {
                             if ($div->nama_divisi == $vacancies->nama_divisi) {
                                 $grouping[$div->nama_divisi][] = $vacancies;
-                                if (count($grouping[$div->nama_divisi]) >= 5) {
+                                if (count($grouping[$div->nama_divisi]) >= 6) {
                                     break;
                                 }
                             }
@@ -873,7 +1003,7 @@ class Vacancy extends CI_Controller
                     $divisi = $this->VacancyModel->getDivisi($idDivisi)->result();
                     foreach ($query->result() as $vacancies) {
                         $grouping[$divisi[0]->nama_divisi][] = $vacancies;
-                        if (count($grouping[$divisi[0]->nama_divisi]) >= 5) {
+                        if (count($grouping[$divisi[0]->nama_divisi]) >= 6) {
                             break;
                         }
                     }
@@ -918,7 +1048,7 @@ class Vacancy extends CI_Controller
                 if ($query->num_rows() > 0) {
 
                     $result = $query->result();
-                    $pageCount = ceil(count($result) / 2);
+                    $pageCount = ceil(count($result) / 9);
 
                     if (!isset($page)) {
                         $page = 1;
@@ -937,12 +1067,102 @@ class Vacancy extends CI_Controller
                         'message' => 'Vacancies Found',
                         'page' => $page,
                         'page_count' => $pageCount,
-                        'data' => array_slice($result, ($page * 2) - 2, $page * 2)
+                        'data' => array_slice($result, ($page * 9) - 9, $page * 9)
                     ];
                 } else {
                     $data['response'] = [
                         'status' => 404,
                         'message' => 'No Data Available',
+                    ];
+                }
+
+                break;
+
+            default:
+                $data['response'] = [
+                    'status' => 400,
+                    'message' => 'Bad Request',
+                ];
+                break;
+        }
+
+        header('Content-Type: application/json');
+        echo json_encode($data);
+    }
+
+    public function index_vacancy_detail($idVacancy)
+    {
+        $request_method = $_SERVER['REQUEST_METHOD'];
+        switch ($request_method) {
+            case 'GET':
+                $vacancy = $this->VacancyModel->getData('tbl_vacancy', ['id_vacancy' => $idVacancy]);
+                $jobdesc = $this->VacancyModel->getData('tbl_jobdesc', ['id_vacancy' => $idVacancy]);
+                $salary = $this->VacancyModel->getData('tbl_salary', ['id_vacancy' => $idVacancy]);
+                $divisi = $this->VacancyModel->getData('tbl_divisi', ['id_divisi' => $vacancy->result()[0]->id_divisi]);
+
+                $persyaratan = $this->VacancyModel->getData('tbl_persyaratan', ['id_vacancy' => $idVacancy]);
+                $idPersyaratan = $persyaratan->result()[0]->id_persyaratan;
+                $pendidikan = $this->VacancyModel->getData('tbl_pendidikan', ['id_pendidikan' => $persyaratan->result()[0]->id_pendidikan]);
+                $pengalaman = $this->VacancyModel->getData('tbl_pengalaman', ['id_persyaratan' => $idPersyaratan]);
+                $tambahan_persyaratan = $this->VacancyModel->getData('tbl_tambahan_persyaratan', ['id_persyaratan' => $idPersyaratan]);
+
+                if ($vacancy->num_rows() > 0) {
+                    $data['response'] = [
+                        'status' => 200,
+                        'message' => 'Vacancy Found',
+                        'data' => [
+                            'divisi' => $divisi->result(),
+                            'vacancy' => $vacancy->result(),
+                            'persyaratan' => $persyaratan->result(),
+                            'pendidikan' => $pendidikan->result(),
+                            'jobdesc' => $jobdesc->result(),
+                            'salary' => $salary->result(),
+                            'pengalaman' => $pengalaman->result(),
+                            'tambahan_persyaratan' => $tambahan_persyaratan->result()
+                        ]
+                    ];
+                } else {
+                    $data['response'] = [
+                        'status' => 404,
+                        'message' => 'No Vacancy Found',
+                    ];
+                }
+
+                break;
+
+            default:
+                $data['response'] = [
+                    'status' => 400,
+                    'message' => 'Bad Request',
+                ];
+                break;
+        }
+
+        header('Content-Type: application/json');
+        echo json_encode($data);
+    }
+
+    public function index_filter_vacancy_in_divisi($idDivisi)
+    {
+        $request_method = $_SERVER['REQUEST_METHOD'];
+        switch ($request_method) {
+            case 'GET':
+
+                $status = $this->input->get('status');
+                $level = $this->input->get('level');
+
+                $vacancies = $this->VacancyModel->getDataFilter($status, $level, $idDivisi);
+
+                if ($vacancies->num_rows() > 0) {
+                    $data['response'] = [
+                        'status' => 200,
+                        'message' => 'Data Found',
+                        'data' => $vacancies->result()
+                    ];
+                } else {
+                    $data['response'] = [
+                        'status' => 404,
+                        'message' => 'No Vacancy Found',
                     ];
                 }
 

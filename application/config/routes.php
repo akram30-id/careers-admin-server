@@ -2,6 +2,7 @@
 defined('BASEPATH') OR exit('No direct script access allowed');
 
 $route['divisi/i/(:any)'] = 'Divisi/index/$1';
+$route['divisi/id/(:any)'] = 'Divisi/index_divisi_by_id/$1';
 
 $route['pendidikan/'] = 'Pendidikan/';
 
@@ -16,6 +17,15 @@ $route['vacancy/s-divisi/(:any)'] = 'Vacancy/index_sortby_divisi/$1';
 $route['vacancy/divisi/(:any)/(:any)'] = 'Vacancy/index_vacancy_divisi/$1/$2';
 
 $route['vacancy/status'] = 'Vacancy/index_update_status/';
+
+// get detail vacancy (by id)
+$route['vacancy/id/(:any)'] = 'Vacancy/index_vacancy_detail/$1';
+
+// get filtered vacancy on divisi
+$route['vacancy/f/(:any)'] = 'Vacancy/index_filter_vacancy_in_divisi/$1';
+
+// get for update vacancy
+$route['vacancy/u/(:any)'] = 'Vacancy/updateVacancy/$1';
 
 /*
 | -------------------------------------------------------------------------
