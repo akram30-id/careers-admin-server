@@ -27,6 +27,15 @@ $route['vacancy/f/(:any)'] = 'Vacancy/index_filter_vacancy_in_divisi/$1';
 // get for update vacancy
 $route['vacancy/u/(:any)'] = 'Vacancy/updateVacancy/$1';
 
+
+// FILTER ROUTE
+
+// get filter jabatan
+$route['filter/(:any)'] = 'Filter/index/$1';
+
+// get point pendidikan
+$route['edupoint/(:any)'] = 'Filter/getPendidikan/$1';
+
 /*
 | -------------------------------------------------------------------------
 | URI ROUTING

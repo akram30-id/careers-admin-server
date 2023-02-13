@@ -98,4 +98,9 @@ class VacancyModel extends CI_Model
 
         // return $this->db->query("SELECT * FROM tbl_vacancy INNER JOIN tbl_salary ON tbl_vacancy.id_vacancy = tbl_salary.id_vacancy INNER JOIN tbl_divisi ON tbl_vacancy.id_divisi = tbl_divisi.id_divisi WHERE tbl_vacancy.id_divisi = '$idDivisi' AND (tbl_vacancy.status = '$status' OR tbl_vacancy.level = '$level' OR tbl_salary.min_salary BETWEEN $min_minimum AND $min_maximum OR tbl_salary.max_salary BETWEEN $max_minimum AND $max_maximum);");
     }
+
+    function getExpired ()
+    {
+        return $this->db->query("SELECT * FROM `tbl_vacancy` WHERE expired_at < CURRENT_DATE();");
+    }
 }

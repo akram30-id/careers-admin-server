@@ -905,6 +905,7 @@ class Vacancy extends CI_Controller
                 $query = $this->VacancyModel->updateStatus($idVacancy, $status);
 
                 if ($query) {
+                    $this->VacancyModel->updateLowongan('tbl_vacancy', ['id_vacancy' => $idVacancy], ['expired_at' => NULL]);
                     $data['response'] = [
                         'status' => 200,
                         'message' => 'Vacancy Updated',
@@ -1178,5 +1179,17 @@ class Vacancy extends CI_Controller
 
         header('Content-Type: application/json');
         echo json_encode($data);
+    }
+
+    public function synchronize ()
+    {
+        $expired = $this->VacancyModel->getExpired();
+
+        foreach ($expired->result() as $exp) {
+            $this->VacancyModel->updateLowongan('tbl_vacancy', ['id_vacancy' => $exp->id_vacancy], ['status' => 'Close']);
+        }
+
+        header('Content-Type: application/json');
+        echo json_encode('updated');
     }
 }
