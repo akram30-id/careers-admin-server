@@ -231,6 +231,7 @@ class Vacancy extends CI_Controller
                         'level' => $level,
                         'posisi' => $posisi,
                         'deskripsi_lowongan' => $deskripsi,
+                        'status' => 'Open',
                         'created_at' => $created_at,
                         'expired_at' => $expired_at,
                     ];
@@ -978,7 +979,7 @@ class Vacancy extends CI_Controller
         $request_method = $_SERVER['REQUEST_METHOD'];
         switch ($request_method) {
             case 'GET':
-                $searchValue = $this->input->get('search_value');
+                $searchValue = str_replace('%', ' ', $this->input->get('search_value'));
 
                 $grouping = [];
 

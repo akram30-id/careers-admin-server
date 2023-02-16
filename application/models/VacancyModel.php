@@ -101,6 +101,6 @@ class VacancyModel extends CI_Model
 
     function getExpired ()
     {
-        return $this->db->query("SELECT * FROM `tbl_vacancy` WHERE expired_at < CURRENT_DATE();");
+        return $this->db->query("SELECT * FROM `tbl_vacancy` WHERE expired_at < CURRENT_DATE() AND expired_at != '0000-00-00';");
     }
 }
